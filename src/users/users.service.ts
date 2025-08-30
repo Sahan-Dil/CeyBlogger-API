@@ -1,0 +1,39 @@
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+import { User, UserDocument } from './schemas/user.schema';
+
+@Injectable()
+export class UsersService {
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+
+  async findByEmail(email: string) {
+    return this.userModel.findOne({ email: email.toLowerCase() }).exec();
+  }
+
+  async findByEmailWithPassword(email: string) {
+    return this.userModel.findOne({ email: email.toLowerCase() }).select('+password').exec();
+  }
+
+  async createUser(data: { name: string; email: string; password: string; avatarUrl?: string }) {
+    const existing = await this.findByEmail(data.email);
+    if (existing) throw new ConflictException('Email already registered');
+
+    const hash = await bcrypt.hash(data.password, 12);
+    const created = await this.userModel.create({
+      name: data.name,
+      email: data.email.toLowerCase(),
+      password: hash,
+      avatarUrl: data.avatarUrl ?? '',
+      bio: '',
+    });
+    return created.toJSON(); // applies transform
+  }
+
+  async getPublicUserById(id: string) {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user.toJSON();
+  }
+}
