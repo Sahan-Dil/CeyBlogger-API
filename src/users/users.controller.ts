@@ -6,6 +6,7 @@ import {
   UseGuards,
   UploadedFile,
   UseInterceptors,
+  Get,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -44,5 +45,13 @@ export class UsersController {
       data['avatarUrl'] = file.path;
     }
     return this.usersService.updateUser(id, data);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get user profile by ID' })
+  async getUser(@Param('id') id: string) {
+    return this.usersService.getPublicUserById(id);
   }
 }

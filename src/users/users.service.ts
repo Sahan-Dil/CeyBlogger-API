@@ -35,7 +35,13 @@ export class UsersService {
   async getPublicUserById(id: string) {
     const user = await this.userModel.findById(id).exec();
     if (!user) throw new NotFoundException('User not found');
-    return user.toJSON();
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+    };
   }
 
   async updateUser(
