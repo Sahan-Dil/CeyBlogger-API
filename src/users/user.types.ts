@@ -6,4 +6,6 @@ export interface User {
   password?: string;
   avatarUrl?: string;
   bio?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
