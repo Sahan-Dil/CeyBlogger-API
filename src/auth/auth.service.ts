@@ -1,8 +1,21 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { Types } from 'mongoose';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/user.types';
+
+interface UserDocument {
+  _id: Types.ObjectId;
+  id?: string;
+  name: string;
+  email: string;
+  password: string;
+  avatarUrl?: string;
+  bio?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  __v?: number;
+}
 
 @Injectable()
 export class AuthService {
@@ -11,9 +24,15 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  private toPublicUser(user: User) {
+  private toPublicUser(user: UserDocument): {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string;
+    bio: string;
+  } {
     return {
-      id: user.id,
+      id: user.id || user._id.toString(),
       name: user.name,
       email: user.email,
       avatarUrl: user.avatarUrl || '',
@@ -21,16 +40,16 @@ export class AuthService {
     };
   }
 
-  private sign(user: User) {
+  private sign(user: UserDocument): string {
     return this.jwt.sign({
-      sub: user.id,
+      sub: user.id || user._id.toString(),
       email: user.email,
       name: user.name,
     });
   }
 
   async register(data: { name: string; email: string; password: string }) {
-    const created = (await this.users.createUser(data)) as unknown as User;
+    const created = (await this.users.createUser(data)) as UserDocument;
     return {
       user: this.toPublicUser(created),
       token: this.sign(created),
@@ -44,11 +63,9 @@ export class AuthService {
     const ok = await bcrypt.compare(password, user.password ?? '');
     if (!ok) throw new UnauthorizedException('Invalid credentials');
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...plain } = user;
     return {
-      user: this.toPublicUser(plain as unknown as User),
-      token: this.sign(plain as unknown as User),
+      user: this.toPublicUser(user),
+      token: this.sign(user),
     };
   }
 }
