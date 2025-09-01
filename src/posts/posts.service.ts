@@ -42,12 +42,17 @@ export class PostsService {
     authorId?: string | null;
     tag?: string | null;
     search?: string | null;
-    publishedOnly?: boolean;
+    published?: boolean;
   }) {
     const limit = Math.min(opts.limit ?? 10, 50);
     const query: FilterQuery<Post> = {};
 
-    if (opts.publishedOnly ?? true) query.published = true;
+    if (typeof opts.published === 'boolean') {
+      query.published = opts.published;
+    } else {
+      query.published = true;
+    }
+
     if (opts.authorId) query.authorId = new Types.ObjectId(opts.authorId);
     if (opts.tag) query.tags = opts.tag;
     if (opts.search) query.$text = { $search: opts.search };

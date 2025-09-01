@@ -45,8 +45,10 @@ export class PostsController {
     @Query('authorId') authorId?: string,
     @Query('tag') tag?: string,
     @Query('search') search?: string,
+    @Query('published') published?: string,
   ) {
     const parsedLimit = limit ? parseInt(limit, 10) : undefined;
+    const parsedPublished = published !== undefined ? published === 'true' : undefined;
 
     let parsedCursor: { createdAt: string; id: string } | null = null;
     if (cursor) {
@@ -66,7 +68,7 @@ export class PostsController {
       authorId,
       tag,
       search,
-      publishedOnly: true,
+      published: parsedPublished,
     });
   }
 
