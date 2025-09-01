@@ -3,12 +3,15 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { configureCloudinary } from './configs/cloudinary.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // ConfigService to load from .env
   const configService = app.get(ConfigService);
+
+  configureCloudinary(configService);
 
   // Enable CORS
   app.enableCors({
@@ -29,7 +32,17 @@ async function bootstrap() {
     .setTitle('CeyBlogger-API')
     .setDescription('API documentation for CeyBlogger platform')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'access-token',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

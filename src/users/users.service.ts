@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './schemas/user.schema';
+import { IUser } from './user.types';
 
 @Injectable()
 export class UsersService {
@@ -34,6 +35,31 @@ export class UsersService {
   async getPublicUserById(id: string) {
     const user = await this.userModel.findById(id).exec();
     if (!user) throw new NotFoundException('User not found');
-    return user.toJSON();
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+    };
+  }
+
+  async updateUser(
+    id: string,
+    data: Partial<{ name: string; bio: string; avatarUrl: string }>,
+  ): Promise<IUser> {
+    const updated = await this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
+    if (!updated) throw new NotFoundException('User not found');
+    return this.toIUser(updated);
+  }
+
+  private toIUser(user: UserDocument): IUser {
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+    };
   }
 }
