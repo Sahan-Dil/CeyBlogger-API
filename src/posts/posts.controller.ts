@@ -25,8 +25,8 @@ interface AuthenticatedRequest extends Request {
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
+  //   @UseGuards(JwtAuthGuard) -- Removed auth guard to allow public access - all users can view posts
+  //   @ApiBearerAuth('access-token')
   @Get()
   @ApiOperation({ summary: 'List posts (cursor pagination, newest first)' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items to return' })
