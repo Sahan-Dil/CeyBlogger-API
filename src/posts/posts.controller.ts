@@ -74,6 +74,12 @@ export class PostsController {
     });
   }
 
+  @Get('filters')
+  @ApiOperation({ summary: 'Get unique authors and tags for filtering (no auth required)' })
+  async getFilters() {
+    return this.postsService.getTemplates();
+  }
+
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Get(':id')

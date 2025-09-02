@@ -62,4 +62,20 @@ export class UsersService {
       bio: user.bio,
     };
   }
+
+  async findByIds(ids: string[]): Promise<{ id: string; name: string }[]> {
+    if (!ids || ids.length === 0) return [];
+
+    // only select name (and _id implicitly)
+    const docs = await this.userModel
+      .find({ _id: { $in: ids } })
+      .select('name')
+      .exec();
+
+    // docs is typed as UserDocument[], map to plain objects with explicit types
+    return docs.map((d) => ({
+      id: d._id.toString(),
+      name: d.name,
+    }));
+  }
 }

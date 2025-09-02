@@ -10,6 +10,7 @@ import { FilterQuery, Model, Types } from 'mongoose';
 import { Post, PostDocument } from './schemas/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CommentsService } from 'src/reactions/comments.service';
+import { UsersService } from 'src/users/users.service';
 
 export interface Cursor {
   createdAt: string; // ISO
@@ -22,6 +23,7 @@ export class PostsService {
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     @Inject(forwardRef(() => CommentsService))
     private readonly commentsService: CommentsService,
+    private readonly usersService: UsersService,
   ) {}
 
   // Create a post (authorId must be ObjectId)
@@ -141,5 +143,22 @@ export class PostsService {
       tags: doc.tags,
       likes: doc.likes,
     };
+  }
+
+  async getTemplates() {
+    const posts = await this.postModel.find().select('tags authorId').exec();
+
+    const uniqueAuthorIds = [...new Set(posts.map((p) => p.authorId.toString()))];
+    const tags = [...new Set(posts.flatMap((p) => p.tags || []))];
+
+    // fetch users
+    const authorsDocs = await this.usersService.findByIds(uniqueAuthorIds);
+
+    const authors = authorsDocs.map((u) => ({
+      id: u.id,
+      name: u.name,
+    }));
+
+    return { authors, tags };
   }
 }
