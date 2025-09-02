@@ -27,7 +27,9 @@ export class CommentsService {
     });
     const saved = await doc.save();
 
-    await this.notifyPostAuthor(postId, userId, dto.content);
+    this.notifyPostAuthor(postId, userId, dto.content).catch((err) => {
+      console.error('Failed to send notification to post author:', err);
+    });
 
     return this.toPublic(saved);
   }
@@ -148,8 +150,6 @@ export class CommentsService {
       <p>View the post here: <a href="${process.env.FRONTEND_URL}/posts/${postId}">Link</a></p>
     `;
 
-    console.log('================', author.email);
-
-    await sendEmail('sahandilshan.projects@gmail.com', 'New comment on your post', html);
+    await sendEmail(author.email, 'New comment on your post', html);
   }
 }
