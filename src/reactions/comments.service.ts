@@ -6,12 +6,16 @@ import { Like, LikeDocument } from './schemas/like.schema';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { LikeDto } from './dto/like.dto';
 import { PublicComment } from './comment.types';
+import { UsersService } from 'src/users/users.service';
+import { Post, PostDocument } from 'src/posts/schemas/post.schema';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     @InjectModel(Like.name) private likeModel: Model<LikeDocument>,
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private readonly usersService: UsersService,
   ) {}
 
   async addComment(userId: string, postId: string, dto: CreateCommentDto) {
@@ -22,6 +26,9 @@ export class CommentsService {
       parentId: dto.parentId ? new Types.ObjectId(dto.parentId) : undefined,
     });
     const saved = await doc.save();
+
+    await this.notifyPostAuthor(postId, userId, dto.content);
+
     return this.toPublic(saved);
   }
 
@@ -116,5 +123,33 @@ export class CommentsService {
       .exec();
 
     return !!existing;
+  }
+
+  private async notifyPostAuthor(postId: string, commenterId: string, commentContent: string) {
+    // Get post document
+    const post = await this.postModel.findById(postId).lean().exec();
+    if (!post) return;
+
+    // Skip if author commented on own post
+    if (post.authorId.toString() === commenterId) return;
+
+    // Get author and commenter info
+    const author = await this.usersService.getPublicUserById(post.authorId.toString());
+    const commenter = await this.usersService.getPublicUserById(commenterId);
+
+    if (!author?.email) return;
+
+    const { sendEmail } = await import('../helpers/mail.helper.js');
+
+    const html = `
+      <p>Hi ${author.name},</p>
+      <p>${commenter.name} commented on your post:</p>
+      <blockquote>${commentContent}</blockquote>
+      <p>View the post here: <a href="${process.env.FRONTEND_URL}/posts/${postId}">Link</a></p>
+    `;
+
+    console.log('================', author.email);
+
+    await sendEmail('sahandilshan.projects@gmail.com', 'New comment on your post', html);
   }
 }
