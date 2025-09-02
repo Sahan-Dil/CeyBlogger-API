@@ -46,7 +46,7 @@ export class UsersService {
 
   async updateUser(
     id: string,
-    data: Partial<{ name: string; bio: string; avatarUrl: string }>,
+    data: Partial<{ name: string; bio: string; avatarUrl: string; password: string }>,
   ): Promise<IUser> {
     const updated = await this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
     if (!updated) throw new NotFoundException('User not found');

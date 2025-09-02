@@ -1,20 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import sgMail from '@sendgrid/mail';
 
-if (!process.env.SENDGRID_API_KEY) {
-  throw new Error('SENDGRID_API_KEY is not set');
-}
-if (!process.env.FROM_EMAIL) {
-  throw new Error('FROM_EMAIL is not set');
+import sgMail, { MailDataRequired } from '@sendgrid/mail';
+
+function getSendGridApiKey(): string {
+  const key = process.env.SENDGRID_API_KEY;
+  if (!key) throw new Error('SENDGRID_API_KEY is not set');
+  return key;
 }
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+function getFromEmail(): string {
+  const from = process.env.FROM_EMAIL;
+  if (!from) throw new Error('FROM_EMAIL is not set');
+  return from;
+}
 
 export async function sendEmail(to: string, subject: string, html: string) {
-  const msg: sgMail.MailDataRequired = {
+  // Set API key at runtime
+  sgMail.setApiKey(getSendGridApiKey());
+
+  const msg: MailDataRequired = {
     to,
-    from: process.env.FROM_EMAIL!,
+    from: getFromEmail(),
     subject,
     html,
   };
@@ -22,12 +29,11 @@ export async function sendEmail(to: string, subject: string, html: string) {
   try {
     await sgMail.send(msg);
     console.log('Email sent successfully');
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('Error sending email:', error.message);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error('Error sending email:', err.message);
     } else {
-      console.error('Unknown error sending email:', error);
+      console.error('Unknown error sending email:', err);
     }
-    throw error;
   }
 }

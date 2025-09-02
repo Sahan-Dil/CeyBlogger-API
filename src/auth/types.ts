@@ -11,3 +11,9 @@ export interface JwtPayload {
   iat?: number;
   exp?: number;
 }
+
+export interface ResetToken {
+  token: string;
+  userId: string;
+  expiresAt: Date;
+}
