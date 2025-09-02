@@ -9,6 +9,8 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Delete,
+  Put,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { PostsService } from './posts.service';
@@ -72,6 +74,12 @@ export class PostsController {
     });
   }
 
+  @Get('filters')
+  @ApiOperation({ summary: 'Get unique authors and tags for filtering (no auth required)' })
+  async getFilters() {
+    return this.postsService.getTemplates();
+  }
+
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Get(':id')
@@ -91,5 +99,29 @@ export class PostsController {
   async create(@Req() req: AuthenticatedRequest, @Body() dto: CreatePostDto) {
     const userId = req.user.userId;
     return this.postsService.createPost(userId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a post by ID (auth required)' })
+  @ApiBody({ type: CreatePostDto })
+  async update(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreatePostDto,
+  ) {
+    const userId = req.user.userId;
+    return this.postsService.updatePost(id, userId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a post by ID (auth required)' })
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    await this.postsService.deletePost(id, userId);
+    return { message: 'Post deleted successfully' };
   }
 }
