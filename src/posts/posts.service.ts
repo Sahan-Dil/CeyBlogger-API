@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Post, PostDocument } from './schemas/post.schema';
@@ -86,6 +86,29 @@ export class PostsService {
       : null;
 
     return { posts, nextCursor };
+  }
+
+  async updatePost(postId: string, authorId: string, dto: CreatePostDto) {
+    const post = await this.postModel.findById(postId).exec();
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.authorId.toString() !== authorId) throw new ForbiddenException('Not allowed');
+
+    post.title = dto.title ?? post.title;
+    post.content = dto.content ?? post.content;
+    post.imageUrl = dto.imageUrl ?? post.imageUrl;
+    post.published = dto.published ?? post.published;
+    post.tags = dto.tags ?? post.tags;
+
+    const updated = await post.save();
+    return this.toPublic(updated);
+  }
+
+  async deletePost(postId: string, authorId: string) {
+    const post = await this.postModel.findById(postId).exec();
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.authorId.toString() !== authorId) throw new ForbiddenException('Not allowed');
+
+    await this.postModel.deleteOne({ _id: postId }).exec();
   }
 
   private toPublic(doc: PostDocument) {
