@@ -1,8 +1,15 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Post, PostDocument } from './schemas/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
+import { CommentsService } from 'src/reactions/comments.service';
 
 export interface Cursor {
   createdAt: string; // ISO
@@ -11,7 +18,11 @@ export interface Cursor {
 
 @Injectable()
 export class PostsService {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    @Inject(forwardRef(() => CommentsService))
+    private readonly commentsService: CommentsService,
+  ) {}
 
   // Create a post (authorId must be ObjectId)
   async createPost(authorId: string, dto: CreatePostDto) {
@@ -32,7 +43,14 @@ export class PostsService {
   async getPostById(id: string) {
     const doc = await this.postModel.findById(id).exec();
     if (!doc) return null;
-    return this.toPublic(doc);
+
+    const post = this.toPublic(doc);
+
+    // Get likes count from CommentsService
+    const likeCount = await this.commentsService.getLikesCount(id);
+    post.likes = likeCount;
+
+    return post;
   }
 
   // Cursor pagination + filters + search

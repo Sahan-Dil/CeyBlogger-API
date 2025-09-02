@@ -105,4 +105,16 @@ export class CommentsService {
       updatedAt: doc.updatedAt,
     };
   }
+
+  async hasUserLiked(userId: string, postId: string): Promise<boolean> {
+    const existing = await this.likeModel
+      .findOne({
+        postId: postId,
+        userId: userId,
+      })
+      .lean()
+      .exec();
+
+    return !!existing;
+  }
 }

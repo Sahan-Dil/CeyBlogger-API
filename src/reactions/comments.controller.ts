@@ -44,4 +44,13 @@ export class CommentsController {
   ) {
     return this.commentsService.likePost(req.user.userId, postId, dto);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @Get('liked')
+  @ApiOperation({ summary: 'Check if current user has liked the post' })
+  async isLiked(@Param('postId') postId: string, @Req() req: AuthenticatedRequest) {
+    const liked = await this.commentsService.hasUserLiked(req.user.userId, postId);
+    return { liked };
+  }
 }
