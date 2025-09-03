@@ -57,6 +57,33 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## sample env
+## 📝 Sample `.env` File
+
+```env
+PORT=4000
+NODE_ENV=development
+MONGO_URI=mongodb+srv://sahandilshanprojects_db_user:Q8wAFJHeXjbH2Sr3@cluster0.lfmtf9s.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+pw=Q8wAFJHeXjbH2Sr3
+username=sahandilshanprojects_db_user
+JWT_ACCESS_SECRET=change_me_access
+JWT_REFRESH_SECRET=change_me_refresh
+JWT_ACCESS_TTL=900s
+JWT_REFRESH_TTL=7d
+UPLOAD_DIR=./uploads
+CORS_ORIGIN=http://localhost:9002
+CACHE_TTL=30
+RATE_LIMIT_TTL=60
+RATE_LIMIT=120
+CLOUDINARY_CLOUD_NAME=dcc0k5bzk
+CLOUDINARY_API_KEY=751338316729858
+CLOUDINARY_API_SECRET=VF7Bf1arKudGaDqs8h7UqUM2cbE
+SENDGRID_API_KEY=addKey
+FROM_EMAIL=sahandilshan.contact@gmail.com
+FRONTEND_URL=http://localhost:9002
+```
+
+
 ## API Documentation
 
 You can explore and test the API endpoints using Swagger here:  
